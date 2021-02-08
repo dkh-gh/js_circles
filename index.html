@@ -1,0 +1,198 @@
+﻿
+<!DOCTYPE html>
+
+<html>
+	
+	<head>
+		
+		<meta charset="utf-8">
+		
+		<style>
+			
+			body {background-color: #fff}
+			
+			canvas {
+				border: 1px solid #ccc;
+				margin: 30px 50px
+			}
+			
+			.page {
+				
+				padding: 0;
+				margin: 0 auto;
+				
+				width: 920px;
+				
+			}
+			
+		</style>
+		
+	</head>
+	
+	<body>
+		
+		<div class="page">
+			
+			<input type="text" id="inp0" placeholder="R" value="300">
+			<input type="text" id="inp1" placeholder="x0" value="400">
+			<input type="text" id="inp2" placeholder="y0" value="400">
+			<input type="text" id="inp3" placeholder="nFin" value="2000">
+			<input type="text" id="inp4" placeholder="kMax" value="1">
+			<input type="button" id="okBtn" value="OK"><br>
+			
+			<canvas id="canv" width="800" height="800"></canvas>
+			
+		</div>
+		
+	</body>
+	
+	<script>
+
+		window.addEventListener('load', function() {
+
+		document.getElementById('okBtn').addEventListener('click', function() {
+		start();
+		}, false);
+
+		//addCanv();
+
+		}, false);
+
+
+		function addCanv() {
+			var c = document.getElementById("canv");
+			var ctx = c.getContext("2d");
+			ctx.moveTo(400, 0);
+			ctx.lineTo(400, 800);
+			ctx.moveTo(0, 400);
+			ctx.lineTo(800, 400);
+			ctx.stroke();
+		}
+
+
+		// ################################################################################################
+		function start() {
+			
+			var c = document.getElementById("canv");
+			var ctx = c.getContext("2d");
+			
+			var R = parseInt(document.getElementById('inp0').value);
+			var x0 = parseInt(document.getElementById('inp1').value);
+			var y0 = parseInt(document.getElementById('inp2').value);
+			var nFin = parseInt(document.getElementById('inp3').value);
+			var kMax = document.getElementById('inp4').value;
+			
+			var rX = new Array(); rX[0] = 0;
+			var rY = new Array(); rY[0] = 0;
+			var rYp = 0;
+			var rR = new Array(); rR[0] = 0;
+			
+			var difX = 0;
+			var difY = 0;
+			var difR = 0;
+			
+			var reCalc = false;
+			
+			// отрисовка главного круга
+			ctx.beginPath();
+			ctx.arc(x0, y0, R, 0, 2*Math.PI);
+			ctx.stroke();
+			
+			// координаты вписанного
+			rY[0] = Math.floor(Math.random() * (R*2 + 1)) - R;
+			
+			tI = Math.sqrt( (R*R)-((rY[0])*(rY[0])) );
+			rX[0] = Math.floor(Math.random() * (tI*2 + 1)) - tI;
+			
+			if(nFin > 0) {
+				
+				// отрисовка центра вписанного
+				/*ctx.beginPath();
+				ctx.arc(rX[0]+x0, rY[0]+y0, 1, 0, 2*Math.PI);
+				ctx.fill();*/
+				
+				// расчёт радиуса вписанного
+				rRstd = Math.sqrt( ((rX[0])*(rX[0])) + ((rY[0])*(rY[0])) );
+				rR[0] = R - rRstd;
+				if(rR[0] < 0) rR[0] *= -1;
+				if(rR[0] > (R*kMax)) rR[0] = R*kMax;
+				
+				//отрисовка вписанного
+				ctx.beginPath();
+				ctx.arc(rX[0]+x0, rY[0]+y0, rR[0], 0, 2*Math.PI);
+				ctx.stroke();
+				
+				if(nFin > 1) {
+					
+					for(i = 1; i < nFin; i++) {
+						
+						//console.log(Math.floor(100/(nFin/i))+"%");
+						
+						rY[i] = Math.floor(Math.random() * (R*2 + 1)) - R;
+						tI = Math.sqrt( (R*R)-((rY[i])*(rY[i])) );
+						rX[i] = Math.floor(Math.random() * (tI*2 + 1) - tI);
+						
+						for(i1 = 0; i1 < i; i1++) {
+							if((rY[i] > (rY[i1] - rR[i1])) && (rY[i] < (rY[i1] + rR[i1]))) {
+								
+								tI = Math.sqrt( (rR[i1]*rR[i1])-((rY[i]-rY[i1])*(rY[i]-rY[i1])) );
+								if((rX[i] >= (rX[i1]-tI)) && rX[i] <= (rX[i1]+tI)) reCalc = true;
+								
+							}
+						}
+						/*
+						if((rY[i] > (rY[0] - rR[0])) && (rY[i] < (rY[0] + rR[0]))) {
+							
+							tI = Math.sqrt( (rR[0]*rR[0])-((rY[i]-rY[0])*(rY[i]-rY[0])) );
+							if((rX[i] >= (rX[0]-tI)) && rX[i] <= (rX[0]+tI)) reCalc = true;
+							
+						}
+						*/
+						if(reCalc) {
+							i--;
+							reCalc = false;
+						}
+						else {
+							/*
+							ctx.beginPath();
+							ctx.arc(rX[i]+x0, rY[i]+y0, 1, 0, 2*Math.PI);
+							ctx.fill();
+							*/
+							rR[i] = R;
+							for(i2 = 0; i2 < i; i2++) {
+								
+								difX = rX[i]-rX[i2];
+								if(difX < 0) difX *= -1;
+								difY = rY[i]-rY[i2];
+								if(difY < 0) difY *= -1;
+								
+								
+								if(rR[i] > (Math.sqrt((difX*difX) + (difY*difY)) - rR[i2])) rR[i] = (Math.sqrt((difX*difX) + (difY*difY)) - rR[i2]);
+								
+							}
+							
+							rRstd = Math.sqrt( ((rX[i])*(rX[i])) + ((rY[i])*(rY[i])) );
+							if(rR[i] > R - rRstd) {
+								rR[i] = R - rRstd;
+								if(rR[i] < 0) rR[i] *= -1;
+							}
+							
+							if(rR[i] > (R*kMax)) rR[i] = R*kMax;
+							
+							ctx.beginPath();
+							ctx.arc(rX[i]+x0, rY[i]+y0, rR[i], 0, 2*Math.PI);
+							ctx.stroke();
+							
+						}
+						
+					}
+					
+				}
+				
+			}
+			
+		}
+
+	</script>
+	
+</html>
